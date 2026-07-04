@@ -1,0 +1,28 @@
+{
+  "name": "dyadic-editor",
+  "version": "0.0.1",
+  "description": "Tab-based plain-text editor. Zero data loss is the north star.",
+  "main": "dist-electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:dev": "vite build && electron .",
+    "preview": "vite preview"
+  },
+  "author": "jigar",
+  "license": "MIT",
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.2",
+    "@vitejs/plugin-react": "6.0.3",
+    "electron": "43.0.0",
+    "tailwindcss": "4.3.2",
+    "vite": "8.1.3",
+    "vite-plugin-electron": "1.1.0",
+    "vite-plugin-electron-renderer": "1.0.0"
+  }
+}

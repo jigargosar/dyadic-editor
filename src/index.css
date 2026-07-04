@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Phase 0 baseline: full-bleed editor, keyboard-first, quiet dark surface. */
+html, body, #root { height: 100%; margin: 0; }
