@@ -72,10 +72,18 @@ export function useYNote() {
 
       // gc: false — see file header.
       const doc = new Y.Doc({ gc: false })
-      updates.forEach((u) => Y.applyUpdate(doc, new Uint8Array(u)))
-
       const ytext = doc.getText('content')
-      const undoManager = new Y.UndoManager(ytext, { captureTimeout: 500 })
+
+      // Attach the UndoManager before replay (captureTimeout 0 so each
+      // persisted update lands as its own stack item instead of merging into
+      // one blob) so undo/redo history rebuilds from the update log on boot.
+      // Y.applyUpdate uses origin null, which UndoManager tracks by default.
+      // This history resets at the last idle-GC compaction (electron/db.js
+      // compactNote collapses the update log into one merged update) — same
+      // storage-growth trade-off already accepted for that feature.
+      const undoManager = new Y.UndoManager(ytext, { captureTimeout: 0 })
+      updates.forEach((u) => Y.applyUpdate(doc, new Uint8Array(u)))
+      undoManager.captureTimeout = 500
 
       docRef.current = doc
       ytextRef.current = ytext
