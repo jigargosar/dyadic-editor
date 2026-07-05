@@ -2,7 +2,7 @@
 // electron/db.js via IPC; this hook owns the doc, undo stack, and the
 // snapshot/GC cadence. gc: false so deleted content stays resolvable until
 // our own idle compaction runs (see docs/main-spec-001.md, storage §002).
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import * as Y from 'yjs'
 import { Awareness } from 'y-protocols/awareness'
 
@@ -118,17 +118,20 @@ export function useYNote() {
     }
   }, [])
 
-  function undo() {
+  // Stable identity (empty deps — these only close over refs) so consumers
+  // can safely put them in a useEffect dependency array without that effect
+  // re-running (and e.g. tearing down a CodeMirror view) on every render.
+  const undo = useCallback(() => {
     undoManagerRef.current?.undo()
-  }
+  }, [])
 
-  function redo() {
+  const redo = useCallback(() => {
     undoManagerRef.current?.redo()
-  }
+  }, [])
 
   // Debounced: selection changes fire on every cursor move/keystroke, so this
   // coalesces rapid updates into one IPC write ~CURSOR_IDLE_MS after they stop.
-  function saveCursor(anchor, head) {
+  const saveCursor = useCallback((anchor, head) => {
     pendingCursorRef.current = { anchor, head }
     clearTimeout(cursorTimerRef.current)
     cursorTimerRef.current = setTimeout(() => {
@@ -138,7 +141,7 @@ export function useYNote() {
         pendingCursorRef.current = null
       }
     }, CURSOR_IDLE_MS)
-  }
+  }, [])
 
   return {
     ready,
