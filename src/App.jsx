@@ -5,7 +5,7 @@
 // still applies — yUndoManagerKeymap is given Prec.highest so it wins over
 // minimalSetup's built-in historyKeymap.
 import { useEffect, useRef } from 'react'
-import { EditorState, Prec } from '@codemirror/state'
+import { EditorSelection, EditorState, Prec } from '@codemirror/state'
 import { EditorView, keymap, placeholder } from '@codemirror/view'
 import { minimalSetup } from 'codemirror'
 import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next'
@@ -23,16 +23,23 @@ const editorTheme = EditorView.theme(
 )
 
 export default function App() {
-  const { ready, ytext, undoManager, awareness } = useYNote()
+  const { ready, ytext, undoManager, awareness, initialCursor, saveCursor } = useYNote()
   const parentRef = useRef(null)
 
   useEffect(() => {
     if (!ready || !ytext || !parentRef.current) return
 
+    const docLength = ytext.toString().length
+    const clamp = (n) => Math.max(0, Math.min(n, docLength))
+    const selection = initialCursor
+      ? EditorSelection.single(clamp(initialCursor.anchor), clamp(initialCursor.head))
+      : undefined
+
     const view = new EditorView({
       parent: parentRef.current,
       state: EditorState.create({
         doc: ytext.toString(),
+        selection,
         extensions: [
           minimalSetup,
           Prec.highest(keymap.of(yUndoManagerKeymap)),
@@ -41,13 +48,19 @@ export default function App() {
           EditorView.contentAttributes.of({ spellcheck: 'false' }),
           placeholder('Start typing.'),
           editorTheme,
+          EditorView.updateListener.of((update) => {
+            if (update.selectionSet) {
+              const { anchor, head } = update.state.selection.main
+              saveCursor(anchor, head)
+            }
+          }),
         ],
       }),
     })
     view.focus()
 
     return () => view.destroy()
-  }, [ready, ytext, undoManager, awareness])
+  }, [ready, ytext, undoManager, awareness, initialCursor, saveCursor])
 
   return (
     <div className="flex h-full bg-neutral-900 text-neutral-200 font-mono">

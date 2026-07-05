@@ -46,6 +46,20 @@ function setAppState(key, value) {
   ).run(key, value)
 }
 
+export function getCursor(noteId) {
+  const raw = getAppState(`cursor:${noteId}`)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+export function setCursor(noteId, anchor, head) {
+  setAppState(`cursor:${noteId}`, JSON.stringify({ anchor, head }))
+}
+
 function createNote() {
   const id = crypto.randomUUID()
   const now = Date.now()

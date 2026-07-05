@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('dyadic', {
   pushUpdate: (noteId, update) => ipcRenderer.invoke('dyadic:pushUpdate', noteId, update),
   pushSnapshot: (noteId, stateVector, snapshot) =>
     ipcRenderer.invoke('dyadic:pushSnapshot', noteId, stateVector, snapshot),
-  idleGC: (noteId, mergedUpdate) => ipcRenderer.invoke('dyadic:idleGC', noteId, mergedUpdate)
+  idleGC: (noteId, mergedUpdate) => ipcRenderer.invoke('dyadic:idleGC', noteId, mergedUpdate),
+  pushCursor: (noteId, anchor, head) => ipcRenderer.invoke('dyadic:pushCursor', noteId, anchor, head)
 })

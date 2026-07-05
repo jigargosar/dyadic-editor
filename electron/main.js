@@ -56,7 +56,11 @@ app.whenReady().then(() => {
 // touches the filesystem directly.
 ipcMain.handle('dyadic:getActiveNote', () => {
   const noteId = db.getOrCreateActiveNote()
-  return { noteId, updates: db.loadUpdates(noteId) }
+  return { noteId, updates: db.loadUpdates(noteId), cursor: db.getCursor(noteId) }
+})
+
+ipcMain.handle('dyadic:pushCursor', (_event, noteId, anchor, head) => {
+  db.setCursor(noteId, anchor, head)
 })
 
 ipcMain.handle('dyadic:pushUpdate', (_event, noteId, update) => {

@@ -9,6 +9,7 @@ import { Awareness } from 'y-protocols/awareness'
 const SNAPSHOT_IDLE_MS = 2000
 const SNAPSHOT_CEILING_MS = 5 * 60 * 1000
 const GC_IDLE_MS = 30 * 1000
+const CURSOR_IDLE_MS = 300
 
 function bytesEqual(a, b) {
   if (!a || !b || a.length !== b.length) return false
@@ -27,10 +28,22 @@ export function useYNote() {
   const lastSnapshotSVRef = useRef(null)
   const idleTimerRef = useRef(null)
   const gcTimerRef = useRef(null)
+  const cursorTimerRef = useRef(null)
+  const pendingCursorRef = useRef(null)
+  const initialCursorRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
     let ceilingTimer = null
+
+    function flushCursor() {
+      clearTimeout(cursorTimerRef.current)
+      const pending = pendingCursorRef.current
+      if (pending && noteIdRef.current) {
+        window.dyadic.pushCursor(noteIdRef.current, pending.anchor, pending.head)
+        pendingCursorRef.current = null
+      }
+    }
 
     function takeSnapshot() {
       const doc = docRef.current
@@ -49,8 +62,9 @@ export function useYNote() {
     }
 
     async function init() {
-      const { noteId, updates } = await window.dyadic.getActiveNote()
+      const { noteId, updates, cursor } = await window.dyadic.getActiveNote()
       if (cancelled) return
+      initialCursorRef.current = cursor
 
       // gc: false — see file header.
       const doc = new Y.Doc({ gc: false })
@@ -87,6 +101,7 @@ export function useYNote() {
 
       ceilingTimer = setInterval(takeSnapshot, SNAPSHOT_CEILING_MS)
       window.addEventListener('blur', takeSnapshot)
+      window.addEventListener('blur', flushCursor)
     }
 
     init()
@@ -97,6 +112,8 @@ export function useYNote() {
       clearTimeout(gcTimerRef.current)
       clearInterval(ceilingTimer)
       window.removeEventListener('blur', takeSnapshot)
+      window.removeEventListener('blur', flushCursor)
+      flushCursor()
       awarenessRef.current?.destroy()
     }
   }, [])
@@ -109,12 +126,28 @@ export function useYNote() {
     undoManagerRef.current?.redo()
   }
 
+  // Debounced: selection changes fire on every cursor move/keystroke, so this
+  // coalesces rapid updates into one IPC write ~CURSOR_IDLE_MS after they stop.
+  function saveCursor(anchor, head) {
+    pendingCursorRef.current = { anchor, head }
+    clearTimeout(cursorTimerRef.current)
+    cursorTimerRef.current = setTimeout(() => {
+      const pending = pendingCursorRef.current
+      if (pending && noteIdRef.current) {
+        window.dyadic.pushCursor(noteIdRef.current, pending.anchor, pending.head)
+        pendingCursorRef.current = null
+      }
+    }, CURSOR_IDLE_MS)
+  }
+
   return {
     ready,
     ytext: ytextRef.current,
     undoManager: undoManagerRef.current,
     awareness: awarenessRef.current,
+    initialCursor: initialCursorRef.current,
     undo,
     redo,
+    saveCursor,
   }
 }
