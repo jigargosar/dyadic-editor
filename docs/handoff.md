@@ -1,16 +1,10 @@
 # Handoff — Dyadic Editor
 
-## Current state (Phase 1 storage core complete)
-1. Electron + React + Vite scaffold boots to the empty editor.
-2. Yjs Y.Doc per note persisted through SQLite (`node:sqlite`, no native rebuild step); every keystroke auto-saves via IPC; content survives app restart.
-3. Snapshots captured on idle (2s) / blur / 5-min ceiling, deduped by state vector; idle-only GC compacts the update log + SQLite VACUUM.
-4. Undo/redo wired via `Y.UndoManager` to Ctrl+Z/Ctrl+Y, and **survives restart** (fixed in `d338321`). Implementation facts and mechanism: `docs/main-spec-001.md` §"Storage & History — Resolution (002)", item 6, footnote 3.
-5. Committed locally: `de1b72b`, `c45739e`, `d338321`. No git remote configured yet, so nothing is pushed.
-
-## Chosen stack (not yet installed — Phase 2+)
-1. Editor: **CodeMirror 6** via `y-codemirror.next`; Vim via `@replit/codemirror-vim`.
-2. Tabs: **dnd-kit**. Search: **MiniSearch**. Multi-clipboard: Electron `clipboard` + `electron-clipboard-extended`.
-3. Tray + global shortcut: Electron `Tray` + `globalShortcut`.
+## Current state (Phase 2 in progress)
+1. Phase 1 (storage core) complete: Yjs + SQLite persistence, undo/redo, snapshots, idle GC all verified — see `main-spec-001.md` §"Storage & History — Resolution (002)".
+2. Phase 2: `src/App.jsx` now runs **CodeMirror 6** bound to the Yjs doc via `y-codemirror.next`, replacing the Phase 0/1 textarea. Done so far: content binding, undo/redo (routed through the same `Y.UndoManager`, not CodeMirror's own `history()`), cursor/selection persistence across restart, toggleable **Vim mode** (Ctrl+;). Implementation facts: `main-spec-001.md` item 4 footnote 4 (cursor persistence + a `useCallback` gotcha worth reading before touching `useYNote.js` again).
+3. Remaining Phase 2 item: **read-only lock** (build-plan-001.md item 10).
+4. Committed locally: `de1b72b`, `c45739e`, `d338321`, `660d7b7`, `1a1409d`, `9bb96d4`. No git remote configured yet, so nothing is pushed.
 
 ## Dev tooling — AI-driven testing
 1. Currently registered: `electron` MCP server → `@laststance/electron-mcp-server@latest` (2.0.1 as of this writing).
@@ -18,19 +12,16 @@
 
 ## Layout
 1. `electron/main.js` — single BrowserWindow (still standard quit; Phase 4 switches to hide-to-tray); dev-only CDP switch; wires `dyadic:*` IPC handlers to `db.js`.
-2. `electron/preload.js` — contextBridge bridge (`window.dyadic`): getActiveNote/pushUpdate/pushSnapshot/idleGC.
-3. `electron/db.js` — `node:sqlite` persistence: notes/updates/snapshots/app_state tables, snapshot dedup, idle compaction + VACUUM.
-4. `src/App.jsx` — Phase 0 textarea, now backed by `src/store/useYNote.js` (CodeMirror replaces the textarea in Phase 2).
-5. `src/store/useYNote.js` — binds a Y.Doc to the textarea; replays persisted updates through an already-attached `Y.UndoManager` on boot; drives snapshot/idle-GC cadence; exposes undo/redo.
+2. `electron/preload.js` — contextBridge bridge (`window.dyadic`): getActiveNote/pushUpdate/pushSnapshot/idleGC/pushCursor.
+3. `electron/db.js` — `node:sqlite` persistence: notes/updates/snapshots/app_state tables, snapshot dedup, idle compaction + VACUUM, per-note cursor storage.
+4. `src/App.jsx` — CodeMirror 6 editor view: yCollab binding, Vim-mode toggle, cursor restore/persist.
+5. `src/store/useYNote.js` — binds a Y.Doc to the note; replays persisted updates through an already-attached `Y.UndoManager` on boot; drives snapshot/idle-GC/cursor-save cadence; exposes `ytext`/`undoManager`/`awareness`/`initialCursor`/`undo`/`redo`/`saveCursor`.
 
 ## Next step
-1. Phase 1 is functionally complete and verified (storage, undo/redo, snapshots, idle GC). Start Phase 2 per `docs/build-plan-001.md` items 8-10:
-   - Replace the plain `<textarea>` in `src/App.jsx` with **CodeMirror 6** (`minimalSetup`), bound to the existing `Y.Doc` via `y-codemirror.next` — must preserve both content restore and cursor/selection restore (relative positions) on reload, not just content.
-   - Add toggleable **Vim mode** via `@replit/codemirror-vim` (add/remove the `vim()` extension).
-   - Add a **read-only lock** (`EditorState.readOnly` / `EditorView.editable.of(false)`) with view-only styling (dimmed background, lock icon, no caret) per `ux-notes-001.md` item 20.
-   - None of these packages are installed yet — `pnpm add` them first.
-2. Git remote is still unconfigured — set one up when ready to push.
+1. **Read-only lock** (build-plan-001.md item 10, ux-notes-001.md item 20): add `EditorState.readOnly` / `EditorView.editable.of(false)` via a `Compartment` (same reconfigure-in-place pattern already used for the Vim toggle — do not recreate the view). Needs view-only styling (dimmed background, lock icon in the UI, no visible caret) — no keybinding assigned yet in ux-notes (item 11 says Ctrl+L for "toggle read-only").
+2. After that, Phase 2 is done and Phase 3 (Tabs, build-plan-001.md items 11-13) starts: tab model (unlimited, title = live first line, "Untitled" default), dnd-kit drag-reorder, close-button width-freeze behavior. None of dnd-kit/MiniSearch/clipboard-extended are installed yet.
+3. Git remote is still unconfigured — set one up when ready to push.
 
 ## Notes
-1. All open questions are resolved (see spec §5 + §"Resolved"). Section marker: `---`/`§`. Global shortcut: Win+Space (AHK). GC: idle-only.
+1. All open questions are resolved (see `main-spec-001.md` §5 + §"Resolved"). Section marker: `---`/`§`. Global shortcut: Win+Space (AHK). GC: idle-only.
 2. Backlog: tab pinning, tab-overflow UX, feature-usage tracking, tips dialogue.
