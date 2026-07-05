@@ -14,7 +14,8 @@
   "license": "MIT",
   "dependencies": {
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "yjs": "13.6.31"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.2",
