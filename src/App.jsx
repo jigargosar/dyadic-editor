@@ -19,6 +19,7 @@ const editorTheme = EditorView.theme(
     '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.625' },
     '.cm-placeholder': { color: '#737373' },
     '&.cm-focused': { outline: 'none' },
+    '&.cm-read-only .cm-content': { opacity: '0.6', caretColor: 'transparent' },
   },
   { dark: true },
 )
@@ -28,7 +29,9 @@ export default function App() {
   const parentRef = useRef(null)
   const viewRef = useRef(null)
   const vimCompartmentRef = useRef(null)
+  const readOnlyCompartmentRef = useRef(null)
   const [vimEnabled, setVimEnabled] = useState(false)
+  const [readOnly, setReadOnly] = useState(false)
 
   useEffect(() => {
     if (!ready || !ytext || !parentRef.current) return
@@ -59,6 +62,29 @@ export default function App() {
       })
     }
 
+    // Ctrl+L toggles read-only the same reconfigure-in-place way — locking a
+    // note must not disturb cursor/scroll/undo state either.
+    readOnlyCompartmentRef.current = new Compartment()
+    // editable stays true even when locked — CodeMirror still blocks edits via
+    // readOnly (reverting any native DOM mutation), and keeping the content
+    // DOM editable means it stays focusable so Ctrl+L can always fire again.
+    // Setting editable false here would remove it from the keydown path,
+    // permanently trapping the note in read-only with no way to unlock.
+    function readOnlyExtensions(on) {
+      return on
+        ? [EditorState.readOnly.of(true), EditorView.editorAttributes.of({ class: 'cm-read-only' })]
+        : []
+    }
+    function toggleReadOnly() {
+      setReadOnly((prev) => {
+        const next = !prev
+        const v = viewRef.current
+        if (!v) return next
+        v.dispatch({ effects: readOnlyCompartmentRef.current.reconfigure(readOnlyExtensions(next)) })
+        return next
+      })
+    }
+
     const view = new EditorView({
       parent: parentRef.current,
       state: EditorState.create({
@@ -66,12 +92,20 @@ export default function App() {
         selection,
         extensions: [
           vimCompartmentRef.current.of(vimEnabled ? [vim()] : []),
+          readOnlyCompartmentRef.current.of(readOnlyExtensions(readOnly)),
           Prec.highest(
             keymap.of([
               {
                 key: 'Mod-;',
                 run: () => {
                   toggleVim()
+                  return true
+                },
+              },
+              {
+                key: 'Mod-l',
+                run: () => {
+                  toggleReadOnly()
                   return true
                 },
               },
@@ -104,9 +138,10 @@ export default function App() {
       <main className="flex flex-1">
         <div ref={parentRef} className="flex-1 overflow-auto" />
       </main>
-      {vimEnabled && (
-        <div className="absolute bottom-2 right-3 text-xs text-neutral-500">VIM</div>
-      )}
+      <div className="absolute bottom-2 right-3 flex gap-2 text-xs text-neutral-500">
+        {readOnly && <span>LOCKED</span>}
+        {vimEnabled && <span>VIM</span>}
+      </div>
     </div>
   )
 }

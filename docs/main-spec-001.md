@@ -145,7 +145,7 @@ Solution per item, tagged by source: *[Library]* (drop-in), *[Built-in]* (Electr
 ## Sections (collapsible blocks)
 9. **Collapse blocks to preview** — *[Library]* CodeMirror `codeFolding` + `foldGutter` (`@codemirror/language`); ad-hoc folds via fold effects. Open: section-boundary rule (blank line vs marker) is an undecided build choice.
 10. **Per-block copy** — *[We build]* copy the folded range's text (small glue over fold ranges).
-11. **Per-block / note read-only lock** — *[Library]* CodeMirror `EditorState.readOnly` / `EditorView.editable.of(false)`, with a view-only style (dimmed background, lock icon, no caret) so the locked state is obvious.
+11. **Per-block / note read-only lock** — *[Library]* CodeMirror `EditorState.readOnly`, with a view-only style (dimmed background, lock icon, no caret) so the locked state is obvious.[^5]
 
 ## Multi-clipboard
 12. **Capture sequential copies** — *[Built-in + Library]* Electron `clipboard` to read; `electron-clipboard-extended` to watch changes and append slots.
@@ -160,3 +160,5 @@ Solution per item, tagged by source: *[Library]* (drop-in), *[Built-in]* (Electr
 # Open Questions (001)
 
 None. All resolved and recorded in their source docs (spec, storage-history-research-002).
+
+[^5]: Implementation facts (`src/App.jsx`): note-level lock toggles via `Mod-l` (Ctrl+L), reconfiguring a `Compartment` in place (same pattern as the Vim toggle) rather than recreating the view. Only `EditorState.readOnly.of(true)` is applied — deliberately *not* `EditorView.editable.of(false)`. Gotcha hit while wiring this up: setting `editable` to `false` removes the content DOM from Chromium's keydown-delivery path in this Electron build, so once locked, the `Mod-l` keymap (which lives on that same DOM node) can never fire again — a permanent lock with no way back. `EditorState.readOnly` alone is sufficient to block edits (CodeMirror reverts any native DOM mutation when the state disallows the resulting transaction) while leaving the content DOM focusable, so the toggle keybinding always keeps working. The dimmed/no-caret visual is pure CSS (`opacity` + `caretColor: transparent`) driven off a class applied via `EditorView.editorAttributes`, also reconfigured through the same compartment.
