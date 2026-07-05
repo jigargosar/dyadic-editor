@@ -108,7 +108,7 @@ The settled approach for each critical concern. Stack: **Yjs** (CRDT core) + a p
 3. **Continuous auto-save** — *[Provider]* The provider writes on every update; there is no explicit save action.
 4. **Exact tab-state restore (content + cursor)** — *[Editor binding]* Content restores from the persisted doc; cursor/selection restores via the binding's relative positions and StackItem meta.
 5. **Closed-tab recovery → archive + revisit** — *[We build]* Each note's Y.Doc is retained on close; its id moves between two lists (archive, revisit) in app storage.
-6. **Persistent undo/redo** — *[Yjs core]* `Y.UndoManager` handles undo/redo (merge window tunable); the persisted doc lets history survive restart.
+6. **Persistent undo/redo** — *[Yjs core]* `Y.UndoManager` handles undo/redo (merge window tunable); the persisted doc lets history survive restart.[^3]
 7. **Snapshot / version history** — *[Yjs core]* `Y.snapshot` captures point-in-time state as a lightweight StateVector + DeleteSet, stored per note. Cadence: on-pause (idle gap) + blur + N-minute ceiling.
 8. **No redo data loss** — *[Yjs core]* Snapshots are immutable reference points; restoring one never destroys any other state.
 9. **Snapshot dedup** — *[Yjs core + We build]* A new snapshot is skipped when its StateVector equals the previous one.
@@ -119,6 +119,7 @@ The settled approach for each critical concern. Stack: **Yjs** (CRDT core) + a p
 
 [^1]: Compaction is ongoing, not one-time — CRDTs accumulate tombstones over heavy editing and must be periodically collapsed.
 [^2]: Nice-to-have; may be deferred without affecting the rest.
+[^3]: Implementation facts (`src/store/useYNote.js`): `Y.UndoManager` must be attached to `ytext` before persisted updates are replayed via `Y.applyUpdate` on boot — it only captures transactions that occur after construction, so attaching it after replay leaves its stack permanently empty. `Y.applyUpdate(doc, update)` (no explicit origin) runs with transaction origin `null`, which is in `Y.UndoManager`'s default `trackedOrigins` (`new Set([null])`), so replayed updates are tracked with no extra wiring. `Y.UndoManager` listens on the doc's `afterTransaction` event, which fires regardless of the transaction's `local` flag, so replay transactions (`local: false`) are captured the same as live-typing transactions (`local: true`). `captureTimeout` is held at 0 during replay so each persisted update becomes its own undo-stack item instead of merging into one (replay runs in a tight synchronous loop, well under the normal 500ms merge window), then restored to 500 after replay for normal live-typing grouping. Trade-off: undo history still resets at the last idle-GC compaction boundary, since compaction (`electron/db.js` `compactNote`) collapses the update log into one merged update by design (see item 10, storage growth/compaction).
 
 ---
 
