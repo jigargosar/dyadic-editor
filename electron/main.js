@@ -6,6 +6,12 @@ import * as db from './db.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// Dev-only CDP access for AI/agent-driven testing (electron-mcp-server, Playwright).
+// Never opens in a packaged build.
+if (!app.isPackaged) {
+  app.commandLine.appendSwitch('remote-debugging-port', '9222')
+}
+
 // Single window reference (this app only ever needs one)
 let win = null
 

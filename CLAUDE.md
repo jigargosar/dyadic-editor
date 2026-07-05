@@ -19,6 +19,15 @@ Dyadic — tab-based plain-text desktop editor (Electron + React + Vite). Zero d
 - `pnpm exec electron .` — launch the built app
 - `pnpm dev` — Vite dev server (renderer only, no Electron shell)
 
+## AI-driven testing
+
+- `electron/main.js` opens CDP on port 9222 in dev builds (`--remote-debugging-port`, gated on `!app.isPackaged` — never active packaged).
+- To drive the running app (click/type/screenshot/eval) instead of testing by hand, register `electron-mcp-server` as an MCP server:
+  `claude mcp add electron -e SECURITY_LEVEL=balanced -e SCREENSHOT_ENCRYPTION_KEY=<32-byte-hex> -- npx -y electron-mcp-server`
+  (the key is required — generate with `openssl rand -hex 32` — the server crashes on start without it).
+- Rebuild (`pnpm build`) before relaunching: CDP only appears if `dist-electron/main.js` is current — a stale build silently omits it.
+- The MCP server attaches via CDP; it does not launch/quit the app itself — start it separately with `pnpm exec electron .`.
+
 ## Docs
 
 - @docs/handoff.md — current phase status and next steps
