@@ -4,6 +4,7 @@
 // our own idle compaction runs (see docs/main-spec-001.md, storage §002).
 import { useEffect, useRef, useState } from 'react'
 import * as Y from 'yjs'
+import { Awareness } from 'y-protocols/awareness'
 
 const SNAPSHOT_IDLE_MS = 2000
 const SNAPSHOT_CEILING_MS = 5 * 60 * 1000
@@ -15,32 +16,13 @@ function bytesEqual(a, b) {
   return true
 }
 
-// Minimal common-prefix/suffix diff so each keystroke becomes one small Yjs
-// op instead of a full-text replace (keeps updates and undo steps granular).
-function applyTextDiff(ytext, oldStr, newStr) {
-  if (oldStr === newStr) return
-  let start = 0
-  const maxStart = Math.min(oldStr.length, newStr.length)
-  while (start < maxStart && oldStr[start] === newStr[start]) start++
-  let endOld = oldStr.length
-  let endNew = newStr.length
-  while (endOld > start && endNew > start && oldStr[endOld - 1] === newStr[endNew - 1]) {
-    endOld--
-    endNew--
-  }
-  ytext.doc.transact(() => {
-    if (endOld > start) ytext.delete(start, endOld - start)
-    if (endNew > start) ytext.insert(start, newStr.slice(start, endNew))
-  })
-}
-
 export function useYNote() {
-  const [text, setText] = useState('')
   const [ready, setReady] = useState(false)
 
   const docRef = useRef(null)
   const ytextRef = useRef(null)
   const undoManagerRef = useRef(null)
+  const awarenessRef = useRef(null)
   const noteIdRef = useRef(null)
   const lastSnapshotSVRef = useRef(null)
   const idleTimerRef = useRef(null)
@@ -88,6 +70,7 @@ export function useYNote() {
       docRef.current = doc
       ytextRef.current = ytext
       undoManagerRef.current = undoManager
+      awarenessRef.current = new Awareness(doc)
       noteIdRef.current = noteId
 
       // Registered after the replay above, so restoring persisted updates
@@ -100,7 +83,6 @@ export function useYNote() {
         gcTimerRef.current = setTimeout(runIdleGC, GC_IDLE_MS)
       })
 
-      setText(ytext.toString())
       setReady(true)
 
       ceilingTimer = setInterval(takeSnapshot, SNAPSHOT_CEILING_MS)
@@ -115,25 +97,24 @@ export function useYNote() {
       clearTimeout(gcTimerRef.current)
       clearInterval(ceilingTimer)
       window.removeEventListener('blur', takeSnapshot)
+      awarenessRef.current?.destroy()
     }
   }, [])
 
-  function updateText(newValue) {
-    const ytext = ytextRef.current
-    if (!ytext) return
-    applyTextDiff(ytext, ytext.toString(), newValue)
-    setText(ytext.toString())
-  }
-
   function undo() {
     undoManagerRef.current?.undo()
-    setText(ytextRef.current?.toString() ?? '')
   }
 
   function redo() {
     undoManagerRef.current?.redo()
-    setText(ytextRef.current?.toString() ?? '')
   }
 
-  return { text, updateText, ready, undo, redo }
+  return {
+    ready,
+    ytext: ytextRef.current,
+    undoManager: undoManagerRef.current,
+    awareness: awarenessRef.current,
+    undo,
+    redo,
+  }
 }
