@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "electron:dev": "vite build && electron .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "kill": "node scripts/kill-electron.js"
   },
   "author": "jigar",
   "license": "MIT",
