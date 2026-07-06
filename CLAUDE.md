@@ -19,7 +19,7 @@ Dyadic — tab-based plain-text desktop editor (Electron + React + Vite). Zero d
 - `pnpm install` — install dependencies
 - `pnpm build` — compiles renderer + `dist-electron/main.js` + `preload.js`
 - `pnpm exec electron .` — launch the built app
-- `pnpm dev` — Vite dev server (renderer only, no Electron shell)
+- `pnpm dev` — Vite dev server; `vite-plugin-electron` auto-launches Electron and hot-restarts the main process on `electron/*.js` changes, with renderer HMR and preload reload — no manual build/relaunch needed during dev
 - `pnpm kill` — kills stray dev Electron instances (`scripts/kill-electron.js`), matched by exact executable path so it never touches other Electron apps (VS Code, Slack, etc.) running from different paths, unlike matching by process name. Resolves the path via `import electron from 'electron'` (no hardcoded version), so it stays correct across Electron upgrades. A single `electron .` launch spawns several OS processes sharing that path (main + renderer + GPU + utility) — the script kills all of them at once, and finding zero matches is a safe no-op.
 
 ## Docs

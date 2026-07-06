@@ -1,15 +1,16 @@
 // Electron main process: creates a single BrowserWindow booting to the empty editor.
-import { app, BrowserWindow, ipcMain, globalShortcut } from 'electron'
+import { app, BrowserWindow, ipcMain, globalShortcut, screen } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as db from './db.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Single-instance lock: a second launch attempt (e.g. double-firing a global
-// shortcut, or an accidental second `electron .`) just focuses the existing
-// window instead of spawning a competing process (which previously fought
-// over the CDP debug port and left stray processes behind).
+// Single-instance lock: a second launch attempt (e.g. an AHK script bound to
+// Win+Space launching the app again, or an accidental second `electron .`)
+// toggles the existing window instead of spawning a competing process
+// (which previously fought over the CDP debug port and left stray processes
+// behind).
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   // A second launch attempt loses the race: quit before anything else in
@@ -28,10 +29,29 @@ if (!gotLock) {
   // Single window reference (this app only ever needs one)
   let win = null
 
+  // Shared toggle used by both the global shortcut and a relaunch attempt
+  // (second-instance) — Windows reserves Win+Space for input-language
+  // switching, so Electron can never register it directly; an AHK script
+  // bound to Win+Space sends Super+Alt+Space instead, which this listens for.
+  function toggleMinMax() {
+    if (win.isMinimized()) {
+      win.restore()
+      win.show()
+      win.focus()
+    } else {
+      win.minimize()
+    }
+  }
+
   function createWindow() {
+    const width = 480
+    const height = 640
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize
     win = new BrowserWindow({
-      width: 1100,
-      height: 750,
+      width,
+      height,
+      x: screenWidth - width,
+      y: Math.round((screenHeight - height) / 2),
       webPreferences: {
         // Preload bridges main <-> renderer over contextBridge
         preload: path.join(__dirname, 'preload.mjs'),
@@ -63,27 +83,13 @@ if (!gotLock) {
   // blocked by the lock above.
   app.on('second-instance', () => {
     if (!win) return
-    if (win.isMinimized()) win.restore()
-    win.show()
-    win.focus()
+    toggleMinMax()
   })
 
   app.whenReady().then(() => {
     db.initDb(app.getPath('userData'))
     createWindow()
-
-    // TEMP PROBE (Phase 4): try a few quick-open shortcut candidates and log
-    // which ones the OS actually grants. Registration succeeding (true) isn't
-    // proof it will fire on keypress — e.g. Windows reserves Super+Space for
-    // input-language switching and may intercept it before Electron sees it —
-    // so these stay live (not unregistered) for a manual press-and-watch check.
-    const candidates = ['Super+Space', 'Super+Alt+Space', 'Control+Alt+Space']
-    for (const accelerator of candidates) {
-      const ok = globalShortcut.register(accelerator, () => {
-        console.log(`[shortcut-probe] fired: ${accelerator}`)
-      })
-      console.log(`[shortcut-probe] register("${accelerator}") ->`, ok)
-    }
+    globalShortcut.register('Super+Alt+Space', toggleMinMax)
   })
 
   app.on('will-quit', () => {
