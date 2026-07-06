@@ -21,7 +21,7 @@
 6. `src/components/TabBar.jsx` — tab strip: drag-reorder, close-button width-freeze/reflow, new-tab button.
 
 ## Next step
-1. **Phase 4 — Tray & quick open** (build-plan-001.md items 14-15): single-instance-lock + shortcut-toggle wiring in progress (see "Current state" above); Electron Tray + close-hides-to-tray not started.
+1. **Phase 4 — Tray & quick open** (build-plan-001.md items 14-15): single-instance-lock + global shortcut (Super+Alt+Space) done and working. Remaining pieces — Electron Tray + close-hides-to-tray (not started), and reconciling `toggleMinMax()`'s minimize/restore-toggle behavior against the spec's "restore last note exactly as it was" language — are deliberately deferred as DX/polish items, to be settled later.
 2. Git remote is still unconfigured — set one up when ready to push.
 
 ## Notes
