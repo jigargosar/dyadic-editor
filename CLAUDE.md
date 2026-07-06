@@ -20,7 +20,7 @@ Dyadic — tab-based plain-text desktop editor (Electron + React + Vite). Zero d
 - `pnpm build` — compiles renderer + `dist-electron/main.js` + `preload.js`
 - `pnpm exec electron .` — launch the built app
 - `pnpm dev` — Vite dev server; `vite-plugin-electron` auto-launches Electron and hot-restarts the main process on `electron/*.js` changes, with renderer HMR and preload reload — no manual build/relaunch needed during dev
-- `pnpm kill` — kills stray dev Electron instances (`scripts/kill-electron.js`), matched by exact executable path so it never touches other Electron apps (VS Code, Slack, etc.) running from different paths, unlike matching by process name. Resolves the path via `import electron from 'electron'` (no hardcoded version), so it stays correct across Electron upgrades. A single `electron .` launch spawns several OS processes sharing that path (main + renderer + GPU + utility) — the script kills all of them at once, and finding zero matches is a safe no-op.
+- `pnpm kill` — kills stray dev Electron instances (`scripts/kill-electron.js`), matched by exact command line (`<electron.exe> .`, resolved via `import electron from 'electron'`) rather than just executable path — a process sharing the path but invoked differently (different args, or none running at all) is left untouched rather than guessed at. Exit codes are deliberate: nothing found → `0` (safe for a chained command to continue), found but a kill failed → `1` (chain should stop). Known gap: this only covers the production `pnpm exec electron .` flow — `pnpm dev` instances (via `vite-plugin-electron`) launch with extra args (`. --no-sandbox`), so their command line never matches and this script can't clean them up.
 
 ## Docs
 
