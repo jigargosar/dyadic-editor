@@ -10,7 +10,8 @@ import { EditorView, keymap, placeholder } from '@codemirror/view'
 import { minimalSetup } from 'codemirror'
 import { vim } from '@replit/codemirror-vim'
 import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next'
-import { useYNote } from './store/useYNote'
+import { useTabs } from './store/useTabs'
+import { TabBar } from './components/TabBar'
 
 const editorTheme = EditorView.theme(
   {
@@ -25,7 +26,20 @@ const editorTheme = EditorView.theme(
 )
 
 export default function App() {
-  const { ready, ytext, undoManager, awareness, initialCursor, saveCursor } = useYNote()
+  const {
+    ready,
+    ytext,
+    undoManager,
+    awareness,
+    initialCursor,
+    saveCursor,
+    tabs,
+    activeTabId,
+    switchTab,
+    createTab,
+    closeTab,
+    reorderTab,
+  } = useTabs()
   const parentRef = useRef(null)
   const viewRef = useRef(null)
   const vimCompartmentRef = useRef(null)
@@ -133,9 +147,43 @@ export default function App() {
     return () => view.destroy()
   }, [ready, ytext, undoManager, awareness, initialCursor, saveCursor])
 
+  // Tab-level shortcuts (ux-notes-001.md): Ctrl+T/W/Tab. Bound at the window
+  // level rather than in the CodeMirror keymap above — these must fire
+  // regardless of whether the editor content DOM currently has focus.
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (!e.ctrlKey) return
+      const key = e.key.toLowerCase()
+      if (key === 't') {
+        e.preventDefault()
+        createTab()
+      } else if (key === 'w') {
+        e.preventDefault()
+        if (activeTabId) closeTab(activeTabId)
+      } else if (e.key === 'Tab') {
+        e.preventDefault()
+        if (tabs.length < 2) return
+        const currentIndex = tabs.findIndex((t) => t.id === activeTabId)
+        const delta = e.shiftKey ? -1 : 1
+        const nextIndex = (currentIndex + delta + tabs.length) % tabs.length
+        switchTab(tabs[nextIndex].id)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [tabs, activeTabId, createTab, closeTab, switchTab])
+
   return (
-    <div className="relative flex h-full bg-neutral-900 text-neutral-200 font-mono">
-      <main className="flex flex-1">
+    <div className="relative flex h-full flex-col bg-neutral-900 text-neutral-200 font-mono">
+      <TabBar
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onSwitch={switchTab}
+        onClose={closeTab}
+        onReorder={reorderTab}
+        onNewTab={createTab}
+      />
+      <main className="flex flex-1 overflow-hidden">
         <div ref={parentRef} className="flex-1 overflow-auto" />
       </main>
       <div className="absolute bottom-2 right-3 flex gap-2 text-xs text-neutral-500">

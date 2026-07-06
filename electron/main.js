@@ -54,10 +54,17 @@ app.whenReady().then(() => {
 // Storage & history core (Phase 1): every Yjs update/snapshot is written
 // immediately by the main-process SQLite provider — the renderer never
 // touches the filesystem directly.
-ipcMain.handle('dyadic:getActiveNote', () => {
-  const noteId = db.getOrCreateActiveNote()
-  return { noteId, updates: db.loadUpdates(noteId), cursor: db.getCursor(noteId) }
-})
+ipcMain.handle('dyadic:bootTabs', () => db.bootTabs())
+
+ipcMain.handle('dyadic:getNote', (_event, noteId) => db.getNote(noteId))
+
+ipcMain.handle('dyadic:createTab', (_event, order) => db.createTab(order))
+
+ipcMain.handle('dyadic:closeTab', (_event, noteId) => db.closeTab(noteId))
+
+ipcMain.handle('dyadic:reorderTab', (_event, noteId, order) => db.setTabOrder(noteId, order))
+
+ipcMain.handle('dyadic:setActiveTab', (_event, noteId) => db.setActiveTab(noteId))
 
 ipcMain.handle('dyadic:pushCursor', (_event, noteId, anchor, head) => {
   db.setCursor(noteId, anchor, head)

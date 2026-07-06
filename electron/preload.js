@@ -4,7 +4,12 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('dyadic', {
   version: '0.0.1',
-  getActiveNote: () => ipcRenderer.invoke('dyadic:getActiveNote'),
+  bootTabs: () => ipcRenderer.invoke('dyadic:bootTabs'),
+  getNote: (noteId) => ipcRenderer.invoke('dyadic:getNote', noteId),
+  createTab: (order) => ipcRenderer.invoke('dyadic:createTab', order),
+  closeTab: (noteId) => ipcRenderer.invoke('dyadic:closeTab', noteId),
+  reorderTab: (noteId, order) => ipcRenderer.invoke('dyadic:reorderTab', noteId, order),
+  setActiveTab: (noteId) => ipcRenderer.invoke('dyadic:setActiveTab', noteId),
   pushUpdate: (noteId, update) => ipcRenderer.invoke('dyadic:pushUpdate', noteId, update),
   pushSnapshot: (noteId, stateVector, snapshot) =>
     ipcRenderer.invoke('dyadic:pushSnapshot', noteId, stateVector, snapshot),
