@@ -2,21 +2,21 @@
 - AI should never use short names, of following sections, only infer them when user uses them.
 
 ## InBasket, Inbox (IB)
--
+- [ ] Tray implementation (electron/main.js) is written but not manually
+      verified: tray icon appears, close minimizes (not hides/quits),
+      Show/Hide menu item toggles, Quit menu item fully exits, left-click
+      toggles.
+- [ ] electron/icon.png is a throwaway placeholder (83-byte solid-color
+      square, generated via a Node script) — swap for a real icon later.
 
 ## Planning (PN)
-- [ ] Electron Tray; close hides to tray, explicit Quit exits. §4
-- [ ] Finalize global-shortcut accelerator, external-launcher script, and toggle semantics. §4
-- [ ] Guard TEMP DEBUG console logging (electron/main.js:63-72 — renderer
-      console-message/render-process-gone/did-fail-load handlers) behind a
-      dev-only flag (e.g. `!app.isPackaged`, matching the CDP switch), rather
-      than removing it. → Before deploy v1
+-
 
 ## Ready (RY)
 -
 
 ## In Progress (IP)
--
+- [ ] Electron Tray; close minimizes to taskbar (not hide), explicit Quit exits. §4
 
 ## Done (DN)
 - [x] Confirmed per-phase footnote pointers (main-spec-001.md footnotes 3-6,
@@ -56,7 +56,7 @@ Status: `[x]` done · `[~]` partial · `[ ]` todo
 - [x] Close-button width-freeze — X stays under the cursor across repeated clicks, widths freeze after each close, reflow only on mouse-leave; overflow deferred.
 
 ## Phase 4 — Tray & quick open
-- [ ] Electron Tray; close hides to tray, explicit Quit exits. Not started — close still quits normally.
+- [~] Electron Tray; close minimizes to taskbar (not hide), explicit Quit exits. Implemented in electron/main.js (createTray, close-to-minimize, Show/Hide + Quit menu); placeholder icon (electron/icon.png), not yet manually tested.
 - [~] Global shortcut (keyboard-first, prefer a Windows-key combo) — quick-open restores the last note exactly as it was; new-tab has a separate shortcut. Single-instance-lock + shared toggle function (second-instance/global-shortcut parity) done, driven via external launcher; exact accelerator, launcher script, and final toggle semantics still being finalized.
 
 ## Phase 5 — Closed-tab recovery
@@ -76,6 +76,19 @@ Status: `[x]` done · `[~]` partial · `[ ]` todo
 
 ## Before deploy v1
 - [ ] Audit and strip dev-only debug tooling (CDP remote-debugging-port switch, electron-mcp-server test setup, any other dev-only diagnostics) so none of it ships in the packaged build.
+
+## DX — Dev Experience
+Won't fix till first launch.
+
+- [ ] Guard TEMP DEBUG console logging (electron/main.js — renderer
+      console-message/render-process-gone/did-fail-load handlers) behind a
+      dev-only flag (e.g. `!app.isPackaged`, matching the CDP switch), rather
+      than removing it.
+- [ ] Finalize global-shortcut accelerator, external-launcher script, and
+      toggle semantics. §4
+- [ ] Restore/minimize toggle mechanics (`toggleMinMax`, tray click-to-toggle,
+      second-instance handoff) — keep current bare-bones behavior, no
+      polish now.
 
 ---
 

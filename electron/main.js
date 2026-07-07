@@ -1,5 +1,5 @@
 // Electron main process: creates a single BrowserWindow booting to the empty editor.
-import { app, BrowserWindow, ipcMain, globalShortcut, screen } from 'electron'
+import { app, BrowserWindow, ipcMain, globalShortcut, screen, Tray, Menu } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as db from './db.js'
@@ -28,6 +28,8 @@ if (!gotLock) {
 
   // Single window reference (this app only ever needs one)
   let win = null
+  let tray = null
+  let isQuitting = false
 
   // Shared toggle used by both the global shortcut and a relaunch attempt
   // (second-instance) — Windows reserves Win+Space for input-language
@@ -77,6 +79,32 @@ if (!gotLock) {
     } else {
       win.loadFile(path.join(__dirname, '../dist/index.html'))
     }
+
+    // Closing the window minimizes to taskbar instead of quitting — only the
+    // tray's Quit item (isQuitting) fully exits.
+    win.on('close', (e) => {
+      if (isQuitting) return
+      e.preventDefault()
+      win.minimize()
+    })
+  }
+
+  function createTray() {
+    tray = new Tray(path.join(__dirname, 'icon.png'))
+    tray.setToolTip('Dyadic')
+    tray.setContextMenu(
+      Menu.buildFromTemplate([
+        { label: 'Show/Hide', click: toggleMinMax },
+        {
+          label: 'Quit',
+          click: () => {
+            isQuitting = true
+            app.quit()
+          },
+        },
+      ]),
+    )
+    tray.on('click', toggleMinMax)
   }
 
   // Fires in the existing (first) instance when a second launch attempt is
@@ -89,6 +117,7 @@ if (!gotLock) {
   app.whenReady().then(() => {
     db.initDb(app.getPath('userData'))
     createWindow()
+    createTray()
     globalShortcut.register('Super+Alt+Space', toggleMinMax)
   })
 
@@ -129,7 +158,8 @@ ipcMain.handle('dyadic:idleGC', (_event, noteId, mergedUpdate) => {
   db.vacuum()
 })
 
-// Phase 4 will change this to hide-to-tray; for now standard quit.
+// Fallback only — the close handler above minimizes instead of destroying
+// the window, so this rarely fires from a normal close.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
