@@ -98,6 +98,9 @@ before being acted on.
 ## Ideal path
 InBasket → Planning → Ready → In Progress → Done, with a duplicate, `§N`-tagged entry kept in sync in Requirements/Backlog.
 
+## Progression/Evolution Cadence
+Check `git log --follow -- docs/board.md` on the first request of each day.
+
 ---
 
 ## Open questions (workflow-only — product open questions live in `main-spec-001.md` §5)
