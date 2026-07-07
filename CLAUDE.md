@@ -14,7 +14,7 @@ Dyadic — tab-based plain-text desktop editor (Electron + React + Vite). Zero d
 - Vite 8 + `@vitejs/plugin-react`; Electron 43 via `vite-plugin-electron` (main/preload built from `electron/main.js`, `electron/preload.js`; renderer/main/preload share one `vite.config.js`). The `simple` API forces the preload build to CJS regardless of the package's ESM `"type": "module"` — Electron's sandboxed preload loader can't execute ESM `import`.
 - Tailwind v4 via `@tailwindcss/vite` — single `@import "tailwindcss";` in `src/index.css`, no `tailwind.config.js`.
 - Plain JavaScript (`.jsx`), not TypeScript.
-- Yjs (CRDT core) + `node:sqlite` persistence for the storage/undo-history layer (Phase 1) — see `docs/main-spec-001.md` §"Storage & History — Resolution (002)".
+- Yjs (CRDT core) + `node:sqlite` persistence for the storage/undo-history layer (Phase 1) — see `src/store/useTabs.js` and `electron/db.js` for implementation detail.
 
 ## Commands
 
@@ -35,6 +35,5 @@ Dyadic — tab-based plain-text desktop editor (Electron + React + Vite). Zero d
 
 ## Docs
 
-- @docs/main-spec-001.md — locked product decisions and storage/history architecture
 - @docs/ux-notes-001.md — keyboard map and UX flows
 - @docs/ai-testing-001.md — driving the running app from Claude Code (MCP setup, tool gotchas, package warnings)

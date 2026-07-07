@@ -51,16 +51,16 @@ Status: `[x]` done · `[~]` partial · `[ ]` todo
 - [x] Read-only lock with view-only styling.
 
 ## Phase 3 — Tabs
-- [x] Tab model: unlimited, title = first line (live), "Untitled" when empty.
+- [x] Tab model: unlimited, blank note (no templates), title = first line (live), "Untitled" when empty.
 - [x] dnd-kit drag-reorder; per-tab close.
-- [x] Close-button width-freeze (reflow on mouse-leave); overflow deferred.
+- [x] Close-button width-freeze (reflow on mouse-leave); overflow deferred. Exact behavior: X stays under the cursor across repeated clicks; widths freeze after each close; reflow only on mouse-leave.
 
 ## Phase 4 — Tray & quick open
 - [ ] Electron Tray; close hides to tray, explicit Quit exits. Not started — close still quits normally.
-- [~] Global shortcut restores last note; separate shortcut for new tab. Single-instance-lock + shared toggle function (second-instance / global-shortcut parity) done, driven via external launcher; exact accelerator, launcher script, and final toggle semantics still being finalized.
+- [~] Global shortcut restores last note; separate shortcut for new tab. Single-instance-lock + shared toggle function (second-instance / global-shortcut parity) done, driven via external launcher; exact accelerator, launcher script, and final toggle semantics still being finalized. Keyboard-first: prefer a Windows-key combo; quick-open = restore last note exactly as it was; new-tab shortcut is separate.
 
 ## Phase 5 — Closed-tab recovery
-- [ ] Archive + revisit buckets; free movement between them.
+- [ ] Archive (reference, no action needed) + Revisit (remind-me) buckets; free movement between them.
 
 ## Phase 6 — Sections
 - [ ] Section marker line (`---`/`§`) driving CodeMirror folding; collapse-to-preview.
@@ -71,7 +71,7 @@ Status: `[x]` done · `[~]` partial · `[ ]` todo
 - [ ] Slots reorderable; "new note from selection".
 
 ## Phase 8 — Search
-- [ ] MiniSearch global index across tabs + archive + revisit; fast section switching.
+- [ ] MiniSearch global index across tabs + archive + revisit; everything searchable, fast frictionless switching matters more than box count.
 - [ ] CodeMirror in-editor find.
 
 ## Before deploy v1
@@ -85,6 +85,8 @@ Status: `[x]` done · `[~]` partial · `[ ]` todo
 - [ ] Tab-overflow UX — Chrome-style shrinking tabs + horizontal scroll fallback.
 - [ ] Feature-usage tracking.
 - [ ] Tips dialogue — IntelliJ-style prompt surfacing unused/underused features + usage counts.
+- [ ] Compressed history display — coalesced timeline UI rendering meaningful snapshots; entries expandable/nameable, driven by snapshot-to-snapshot diffs.
+- [ ] History scrubbing — timeline slider driving snapshot rendering to move through past states (nice-to-have, may be deferred without affecting the rest).
 
 ---
 
@@ -111,5 +113,5 @@ Check `git log --follow -- docs/board.md` on the first request of each day.
 
 ---
 
-## Open questions (workflow-only — product open questions live in `main-spec-001.md` §5)
+## Open questions (workflow-only — product decisions have none, per the archived main-spec-001.md §5)
 - None yet.
