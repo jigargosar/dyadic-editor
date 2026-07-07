@@ -2,7 +2,19 @@
 - AI should never use short names, of following sections, only infer them when user uses them.
 
 ## InBasket, Inbox (IB)
--
+- [ ] Footnote pointers per phase need a home before archiving handoff.md's
+      Current-state section: Phase 1 → main-spec-001.md
+      §"Storage & History — Resolution (002)"; Phase 2 → main-spec-001.md
+      item 4 footnote 4 (cursor persistence + useCallback gotcha) and
+      footnote 5 (read-only lock + focus/keymap gotcha); Phase 3 →
+      main-spec-001.md footnote 6; Phase 4 → build-plan-001.md items 14-15,
+      requestSingleInstanceLock() + CDP-port-conflict rationale.
+- [ ] Dev tooling fact needs a home before archiving handoff.md: currently
+      registered MCP server → @laststance/electron-mcp-server@latest
+      (2.0.1 as of last check); full setup/gotchas live in ai-testing-001.md.
+- [ ] Layout section needs a home before archiving handoff.md: 6-line
+      file-by-file architecture map (electron/main.js, preload.js, db.js,
+      App.jsx, useTabs.js, TabBar.jsx).
 
 ## Planning (PN)
 - [ ] Electron Tray; close hides to tray, explicit Quit exits. §4
