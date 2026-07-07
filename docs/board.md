@@ -53,11 +53,11 @@ Status: `[x]` done · `[~]` partial · `[ ]` todo
 ## Phase 3 — Tabs
 - [x] Tab model: unlimited, blank note (no templates), title = first line (live), "Untitled" when empty.
 - [x] dnd-kit drag-reorder; per-tab close.
-- [x] Close-button width-freeze (reflow on mouse-leave); overflow deferred. Exact behavior: X stays under the cursor across repeated clicks; widths freeze after each close; reflow only on mouse-leave.
+- [x] Close-button width-freeze — X stays under the cursor across repeated clicks, widths freeze after each close, reflow only on mouse-leave; overflow deferred.
 
 ## Phase 4 — Tray & quick open
 - [ ] Electron Tray; close hides to tray, explicit Quit exits. Not started — close still quits normally.
-- [~] Global shortcut restores last note; separate shortcut for new tab. Single-instance-lock + shared toggle function (second-instance / global-shortcut parity) done, driven via external launcher; exact accelerator, launcher script, and final toggle semantics still being finalized. Keyboard-first: prefer a Windows-key combo; quick-open = restore last note exactly as it was; new-tab shortcut is separate.
+- [~] Global shortcut (keyboard-first, prefer a Windows-key combo) — quick-open restores the last note exactly as it was; new-tab has a separate shortcut. Single-instance-lock + shared toggle function (second-instance/global-shortcut parity) done, driven via external launcher; exact accelerator, launcher script, and final toggle semantics still being finalized.
 
 ## Phase 5 — Closed-tab recovery
 - [ ] Archive (reference, no action needed) + Revisit (remind-me) buckets; free movement between them.
