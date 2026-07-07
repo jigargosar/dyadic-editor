@@ -35,8 +35,6 @@ Dyadic — tab-based plain-text desktop editor (Electron + React + Vite). Zero d
 
 ## Docs
 
-- @docs/handoff.md — current phase status and next steps
-- @docs/build-plan-001.md — full phased build order
 - @docs/main-spec-001.md — locked product decisions and storage/history architecture
 - @docs/ux-notes-001.md — keyboard map and UX flows
 - @docs/ai-testing-001.md — driving the running app from Claude Code (MCP setup, tool gotchas, package warnings)
