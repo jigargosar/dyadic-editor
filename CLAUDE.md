@@ -24,6 +24,15 @@ Dyadic — tab-based plain-text desktop editor (Electron + React + Vite). Zero d
 - `pnpm dev` — Vite dev server; `vite-plugin-electron` auto-launches Electron and hot-restarts the main process on `electron/*.js` changes, with renderer HMR and preload reload — no manual build/relaunch needed during dev
 - `pnpm kill` — kills stray dev Electron instances (`scripts/kill-electron.js`), matched by exact command line (`<electron.exe> .`, resolved via `import electron from 'electron'`) rather than just executable path — a process sharing the path but invoked differently (different args, or none running at all) is left untouched rather than guessed at. Exit codes are deliberate: nothing found → `0` (safe for a chained command to continue), found but a kill failed → `1` (chain should stop). Known gap: this only covers the production `pnpm exec electron .` flow — `pnpm dev` instances (via `vite-plugin-electron`) launch with extra args (`. --no-sandbox`), so their command line never matches and this script can't clean them up.
 
+## Architecture
+
+- `electron/main.js` — single-instance-locked BrowserWindow (still standard quit; Phase 4 switches to hide-to-tray); dev-only CDP switch; wires `dyadic:*` IPC handlers to `db.js`.
+- `electron/preload.js` — contextBridge bridge (`window.dyadic`): bootTabs/getNote/createTab/closeTab/reorderTab/setActiveTab/pushUpdate/pushSnapshot/idleGC/pushCursor.
+- `electron/db.js` — `node:sqlite` persistence: notes (+ `order` fractional-index and `is_open` columns)/updates/snapshots/app_state tables, snapshot dedup, idle compaction + VACUUM, per-note cursor storage.
+- `src/App.jsx` — CodeMirror 6 editor view bound to the active tab: yCollab binding, Vim-mode toggle, read-only toggle, cursor restore/persist, tab keyboard shortcuts.
+- `src/store/useTabs.js` — one live Yjs binding per open tab; replays persisted updates through an already-attached `Y.UndoManager` on boot; drives snapshot/idle-GC/cursor-save cadence for the active tab; exposes the tab list, active tab id, switch/create/close/reorder actions, plus the active tab's `ytext`/`undoManager`/`awareness`/`initialCursor`/`undo`/`redo`/`saveCursor`.
+- `src/components/TabBar.jsx` — tab strip: drag-reorder, close-button width-freeze/reflow, new-tab button.
+
 ## Docs
 
 - @docs/handoff.md — current phase status and next steps

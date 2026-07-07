@@ -2,23 +2,15 @@
 - AI should never use short names, of following sections, only infer them when user uses them.
 
 ## InBasket, Inbox (IB)
-- [ ] Footnote pointers per phase need a home before archiving handoff.md's
-      Current-state section: Phase 1 → main-spec-001.md
-      §"Storage & History — Resolution (002)"; Phase 2 → main-spec-001.md
-      item 4 footnote 4 (cursor persistence + useCallback gotcha) and
-      footnote 5 (read-only lock + focus/keymap gotcha); Phase 3 →
-      main-spec-001.md footnote 6; Phase 4 → build-plan-001.md items 14-15,
-      requestSingleInstanceLock() + CDP-port-conflict rationale.
-- [ ] Dev tooling fact needs a home before archiving handoff.md: currently
-      registered MCP server → @laststance/electron-mcp-server@latest
-      (2.0.1 as of last check); full setup/gotchas live in ai-testing-001.md.
-- [ ] Layout section needs a home before archiving handoff.md: 6-line
-      file-by-file architecture map (electron/main.js, preload.js, db.js,
-      App.jsx, useTabs.js, TabBar.jsx).
+-
 
 ## Planning (PN)
 - [ ] Electron Tray; close hides to tray, explicit Quit exits. §4
 - [ ] Finalize global-shortcut accelerator, external-launcher script, and toggle semantics. §4
+- [ ] Guard TEMP DEBUG console logging (electron/main.js:63-72 — renderer
+      console-message/render-process-gone/did-fail-load handlers) behind a
+      dev-only flag (e.g. `!app.isPackaged`, matching the CDP switch), rather
+      than removing it. → Before deploy v1
 
 ## Ready (RY)
 -
@@ -27,6 +19,10 @@
 -
 
 ## Done (DN)
+- [x] Confirmed per-phase footnote pointers (main-spec-001.md footnotes 3-6,
+      build-plan-001.md items 14-15) are already duplicated as inline code
+      comments in useTabs.js/App.jsx/electron/main.js — safe to archive
+      handoff.md/main-spec-001.md without losing this info.
 - [x] Yjs Y.Doc + SQLite persistence, undo/redo, snapshots, idle GC. §1
 - [x] CodeMirror 6 editor: content binding, undo/redo via Y.UndoManager, cursor persistence, Vim mode, read-only lock. §2
 - [x] Tabs: drag-reorder, close-button width-freeze/reflow, full restart persistence. §3
